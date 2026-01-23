@@ -32,3 +32,11 @@ SELECT
   AVG(EXTRACT(EPOCH FROM (ingest_time - event_time))) AS avg_latency_sec,
   MAX(EXTRACT(EPOCH FROM (ingest_time - event_time))) AS max_latency_sec
 FROM rt.ecommerce_events;
+
+SELECT event_type, COUNT(*) 
+FROM rt.ecommerce_events
+GROUP BY event_type;
+
+SELECT COUNT(*) 
+FROM rt.ecommerce_events
+WHERE event_type = 'view' AND total_amount <> 0;
