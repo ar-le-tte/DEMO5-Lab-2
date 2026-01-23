@@ -39,3 +39,4 @@ Latency is defined as the time difference between:
 It is measured in seconds using the following SQL expression:
 ```sql
 EXTRACT(EPOCH FROM (ingest_time - event_time))
+```
