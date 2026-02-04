@@ -12,7 +12,7 @@ import os
 import random
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone,timedelta
 
 PRODUCTS = [(101, "Wireless Mouse", "Electronics", 19.99), (102, "Mechanical Keyboard", "Electronics", 79.99),
     (103, "Water Bottle", "Home", 12.50), (104, "Running Shoes", "Sports", 59.90),
@@ -21,21 +21,30 @@ PRODUCTS = [(101, "Wireless Mouse", "Electronics", 19.99), (102, "Mechanical Key
 
 EVENT_TYPES = ["view", "purchase"]
 
-def now_iso():
-    return datetime.now(timezone.utc).isoformat()
+def now_iso(dt: datetime | None = None) -> str:
+    dt = dt or datetime.now(timezone.utc)
+    return dt.isoformat()
 
-def make_event():
+def make_event(*, allow_late: bool, late_prob: float) -> dict:
     product_id, product_name, category, price = random.choice(PRODUCTS)
     event_type = random.choices(EVENT_TYPES, weights=[0.80, 0.20])[0]  # more views than purchases
-    qty = 1 if event_type == "view" else random.choice([1, 1, 1, 2, 3])
-    total_amount = round(price * qty, 2)
+    if event_type == "view":
+        qty = 1
+        total_amount = 0.0
+    else:
+        qty = random.choice([1, 1, 1, 2, 3])
+        total_amount = round(price * qty, 2)
+    event_dt = datetime.now(timezone.utc)
+
+    if allow_late and random.random() < late_prob:
+        event_dt = event_dt - timedelta(minutes=random.randint(1, 20), seconds=random.randint(0, 59))
 
     return {"event_id": str(uuid.uuid4()), "event_time": now_iso(),
         "user_id": random.randint(1, 5000), "session_id": str(uuid.uuid4()),"event_type": event_type,
         "product_id": product_id, "product_name": product_name, "category": category,
         "price": f"{price:.2f}", "quantity": str(qty), "total_amount": f"{total_amount:.2f}",}
 
-def write_csv(path, rows):
+def write_csv(path: str, rows: int, allow_late: bool, late_prob: float) -> None:
     fieldnames = ["event_id","event_time","user_id","session_id","event_type",
         "product_id","product_name","category","price","quantity","total_amount"]
     with open(path, "w", newline="", encoding="utf-8") as f:
@@ -50,6 +59,10 @@ def main():
     ap.add_argument("--files_per_min", type=int, default=6)     # 6 => one file every 10 seconds
     ap.add_argument("--rows_per_file", type=int, default=200)
     ap.add_argument("--run_minutes", type=int, default=0, help="0 = run forever")
+
+    #late events 
+    ap.add_argument("--allow_late", action="store_true")
+    ap.add_argument("--late_prob", type=float, default=0.05)
     args = ap.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
@@ -58,6 +71,7 @@ def main():
     file_count = 0
     print(f"[generator] Writing CSVs to: {os.path.abspath(args.out_dir)}")
     print(f"[generator] Every {interval:.1f}s | rows/file={args.rows_per_file} | run_minutes={args.run_minutes}")
+    print(f"[generator] allow_late={args.allow_late} late_prob={args.late_prob}")
 
     while True:
         ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
