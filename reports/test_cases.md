@@ -47,8 +47,8 @@ Verify that the event generator produces valid CSV files in the landing director
 
 **Steps**
 ```bash
-python src/data_generator.py --run_minutes 1
-head -n 2 data/incoming/events_*.csv
+ python src/data_generator.py   --out_dir data/incoming   --files_per_min 6   --rows_per_file 200   --run_minutes 2
+ head -n 2 data/incoming/events_*.csv
 ```
 **Expected**
 
@@ -66,9 +66,11 @@ Confirm that Spark Structured Streaming detects new CSV files as they arrive.
 
 **Steps**
 ```bash
-spark-submit \
-  --packages org.postgresql:postgresql:42.7.3 \
-  src/spark_streaming_to_postgres.py --run_seconds 60
+spark-submit   --packages org.postgresql:postgresql:42.7.3 \
+  src/spark_streaming_to_postgres.py \
+  --input_dir data/incoming   --checkpoint_dir data/checkpoint \
+  --env_path config/.env   --trigger_seconds 10   --run_seconds 60
+
 ```
 **Expected**
 
