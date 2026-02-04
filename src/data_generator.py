@@ -51,7 +51,7 @@ def write_csv(path: str, rows: int, allow_late: bool, late_prob: float) -> None:
         w = csv.DictWriter(f, fieldnames=fieldnames)
         w.writeheader()
         for _ in range(rows):
-            w.writerow(make_event())
+            w.writerow(make_event(allow_late=allow_late, late_prob=late_prob))
 
 def main():
     ap = argparse.ArgumentParser()
@@ -78,7 +78,7 @@ def main():
         tmp_path = os.path.join(args.out_dir, f"events_{ts}_{file_count}.tmp")
         final_path = os.path.join(args.out_dir, f"events_{ts}_{file_count}.csv")
         # Writing to tmp then atomically renaming to avoid Spark reading partial files
-        write_csv(tmp_path, args.rows_per_file)
+        write_csv(tmp_path, args.rows_per_file, args.allow_late, args.late_prob)
         os.replace(tmp_path, final_path)
 
         file_count += 1
