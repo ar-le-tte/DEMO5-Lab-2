@@ -74,15 +74,30 @@ Run this to generate the CSV files incrementally in the input directory:
 ```bash
 python src/data_generator.py --run_minutes 1
 ```
+```bash
+python src/data_generator.py \
+  --out_dir data/incoming \
+  --files_per_min 6 \
+  --rows_per_file 200 \
+  --run_minutes 2
+```
 **NB:** The minutes can change
 
 ### Starting the Spark Streaming Job
 To process newly arrived files in micro-batches, apply
 transformations and validation logic, and write the results to PostgreSQL, run:
 ```bash
-python src/data_generator.py --run_minutes 1
+spark-submit \
+  --packages org.postgresql:postgresql:42.7.3 \
+  src/spark_streaming_to_postgres.py \
+  --input_dir data/incoming \
+  --checkpoint_dir data/checkpoint \
+  --env_path config/.env \
+  --trigger_seconds 10 \
+  --run_seconds 120
 ```
 **NB:** The seconds can change
 
-To verify the results, you can check the number of ingested records in postgresql.
+- To verify the results, you can check the number of ingested records in postgresql.
+- Recommended to start the Spark first, then the generator to avoid accumulation of files.
 
