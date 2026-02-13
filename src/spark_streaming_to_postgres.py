@@ -142,7 +142,7 @@ def main():
             "timestamp_utc": datetime.now(timezone.utc).isoformat()
         }
 
-        print(f"[batch {batch_id}] rows={n} time={batch_time:.2f}s rps={metric['rows_per_sec']:.1f} avg_lat={metric['avg_event_latency_sec']}")
+        print(f"[batch {batch_id}] rows={count} time={batch_time:.2f}s rps={metric['rows_per_sec']:.1f} avg_lat={metric['avg_event_latency_sec']}")
         # Export metrics (JSON Lines)
         with open(args.metrics_out, "a", encoding="utf-8") as f:
             f.write(json.dumps(metric) + "\n")
